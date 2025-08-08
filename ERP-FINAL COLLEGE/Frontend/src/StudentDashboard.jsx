@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+
 import axios from "axios";
 
 const StudentDashboard = () => {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState([]);
+  const [rollno,setrollno]=useState(JSON.parse(localStorage.getItem('studentRollNumber'))|| '' )
 
-  const { rollNumber } = useParams();
+  // const { rollNumber } = useParams();
+  
 
   // 🧑 Fetch student details
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/students/${rollNumber}`);
+        const res = await axios.get(`http://localhost:3000/api/students/${rollno}`);
         const studentData = res.data.data;
         setStudent(studentData);
       } catch (err) {
@@ -23,8 +25,8 @@ const StudentDashboard = () => {
       }
     };
 
-    if (rollNumber) fetchStudent();
-  }, [rollNumber]);
+    if (rollno) fetchStudent();
+  }, [rollno]);
 
   // 📋 Fetch assignments
   useEffect(() => {
@@ -47,6 +49,7 @@ const StudentDashboard = () => {
   }, [student]);
 
   const handleLogout = () => {
+    localStorage.removeItem('studentRollNumber');
     window.location.href = "/student/logout";
   };
 

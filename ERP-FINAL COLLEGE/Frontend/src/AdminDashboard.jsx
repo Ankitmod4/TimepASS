@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Doughnut, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -11,25 +11,50 @@ import {
   LinearScale,
 } from "chart.js";
 
-// Register chart elements
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [feeData, setFeeData] = useState({ paid: 0, due: 0, discount: 0 });
   const [assignmentData, setAssignmentData] = useState({ submitted: 0, notSubmitted: 0 });
 
+  // Check if admin is logged in
   useEffect(() => {
-    // Fetch Fee Stats
-    fetch("http://localhost:3000/api/dashboard/fees")
-      .then((res) => res.json())
-      .then((data) => setFeeData(data))
-      .catch((err) => console.error("Fee data error:", err));
+    const adminUsername = localStorage.getItem("adminUsername");
+    if (!adminUsername) {
+      navigate("/admin-login");
+    }
+  }, [navigate]);
 
-    // Fetch Assignment Stats
-    fetch("http://localhost:3000/api/dashboard/assignments")
+  useEffect(() => {
+    fetch("http://localhost:3000/api/findUsers")
       .then((res) => res.json())
-      .then((data) => setAssignmentData(data))
-      .catch((err) => console.error("Assignment data error:", err));
+      .then((data) => {
+        if (!data.data) return;
+
+        const students = data.data;
+
+        // Aggregate Fee Data
+        const paid = students.reduce((sum, s) => sum + (s.PayFees || 0), 0);
+        const due = students.reduce((sum, s) => sum + (s.DueFees || 0), 0);
+        const discount = students.reduce((sum, s) => sum + (s.Discount || 0), 0);
+
+        // Aggregate Assignment Data
+        let submitted = 0;
+        let notSubmitted = 0;
+        students.forEach((s) => {
+          const assignmentStr = Object.values(s.Assignment || {}).join("").toLowerCase();
+          if (assignmentStr.includes("y")) {
+            submitted++;
+          } else {
+            notSubmitted++;
+          }
+        });
+
+        setFeeData({ paid, due, discount });
+        setAssignmentData({ submitted, notSubmitted });
+      })
+      .catch((err) => console.error("Error fetching data:", err));
   }, []);
 
   const feeChartData = {
@@ -37,7 +62,7 @@ const AdminDashboard = () => {
     datasets: [
       {
         label: "Fee Stats",
-        data: [feeData.paid || 0, feeData.due || 0, feeData.discount || 0],
+        data: [feeData.paid, feeData.due, feeData.discount],
         backgroundColor: ["#10B981", "#EF4444", "#FBBF24"],
       },
     ],
@@ -48,7 +73,7 @@ const AdminDashboard = () => {
     datasets: [
       {
         label: "Assignments",
-        data: [assignmentData.submitted || 0, assignmentData.notSubmitted || 0],
+        data: [assignmentData.submitted, assignmentData.notSubmitted],
         backgroundColor: ["#6366F1", "#F87171"],
       },
     ],
@@ -64,7 +89,13 @@ const AdminDashboard = () => {
           <Link to="/fees" className="hover:text-purple-300">Fees</Link>
           <Link to="/assignments" className="hover:text-purple-300">Assignments</Link>
           <Link to="/subjects" className="hover:text-purple-300">Subjects</Link>
-          <Link to="/admin/logout" className="hover:text-red-400 font-bold">Logout</Link>
+          <Link
+            to="/admin-login"
+            className="hover:text-red-400 font-bold"
+            onClick={() => localStorage.removeItem("adminUsername")}
+          >
+            Logout
+          </Link>
         </nav>
       </header>
 
@@ -74,13 +105,13 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Fee Chart */}
           <div className="bg-gray-800 p-6 rounded-xl">
-            <h3 className="text-lg font-semibold mb-2">Fee Collection Breakdown</h3>
+            <h3 className="text-lg font-semibold mb-2">Total Fee Collection</h3>
             <Doughnut data={feeChartData} />
           </div>
 
           {/* Assignment Chart */}
           <div className="bg-gray-800 p-6 rounded-xl">
-            <h3 className="text-lg font-semibold mb-2">Assignment Submission Stats</h3>
+            <h3 className="text-lg font-semibold mb-2">Assignment Submissions</h3>
             <Bar data={assignmentChartData} />
           </div>
         </div>

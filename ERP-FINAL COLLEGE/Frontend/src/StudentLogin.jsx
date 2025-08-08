@@ -15,10 +15,16 @@ const handleLogin = async () => {
       rollNumber: roll,
       Password: dob,
     });
-     
+     let rollno=JSON.stringify(roll);
+    localStorage.setItem('studentRollNumber', rollno);
 
     if (response.status === 200) {
-     navigate(`/student-dashboard/${response.data.data.rollNumber}`);
+     if(localStorage.getItem('studentRollNumber')){
+     navigate(`/student-dashboard`);
+     }
+     else{
+      navigate(`/`);
+     }
 
     } else {
       setError('Invalid Roll Number or Password');

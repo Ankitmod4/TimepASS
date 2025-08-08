@@ -6,7 +6,7 @@ const AdminLogin = () => {
     username: "",
     password: "",
   });
-
+ const [data,setdata]=useState(JSON.parse(localStorage.getItem('adminUsername'))|| '');
   const handleChange = (e) => {
     setFormData({ 
       ...formData, 
@@ -16,18 +16,22 @@ const AdminLogin = () => {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
+
   
 
- 
   try {
     const response = await axios.post('http://localhost:3000/api/adminlogin', {
       name:formData.username, 
       password:formData.password
     });
-    console.log("Response:", response);
+    let data=JSON.stringify(formData.username);
+    localStorage.setItem('adminUsername', data);
+    
     if (response.status === 200) {
       console.log("Login successful", response.data);
+      if(data){
       window.location.href = "/admin-dashboard"; 
+      }
     } else {
       console.error("Login failed", response.data);
       alert("Invalid admin credentials");
