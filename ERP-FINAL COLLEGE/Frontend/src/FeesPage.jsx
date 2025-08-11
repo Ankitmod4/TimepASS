@@ -66,6 +66,7 @@ const FeesPage = () => {
  // 💾 Save/Update Fee Info
 const save = async () => {
   try {
+    console.log(fee.roll, fee.sem, fee.total, fee.discount, fee.paid);
     const res = await fetch(`http://localhost:3000/api/update/${fee.roll}`, {
       method: "PUT",
       headers: {

@@ -1,11 +1,13 @@
 const StudentFee = require('../FeesModel');
-const Student = require('../Model'); 
+const Student = require('../Model');
 
 exports.updateStudentFee = async (req, res) => {
   try {
     const { roll } = req.params;
     const { semester, paid, discount, total } = req.body;
-
+     
+    // console.log("Updating fee record for roll:", roll);
+    // console.log("This one",req.body)
     if (!roll) {
       return res.status(400).json({
         success: false,
@@ -14,11 +16,20 @@ exports.updateStudentFee = async (req, res) => {
     }
 
     // 🔍 Find fee record
-    const feeRecord = await StudentFee.findOne({ roll });
+    let feeRecord = await StudentFee.findOne({ roll });
+
     if (!feeRecord) {
-      return res.status(404).json({
-        success: false,
-        message: "Fee record not found",
+      // 📌 If no fee record found, create one
+      feeRecord = await StudentFee.create({
+        roll,
+        semester: semester || '',
+        paid: paid || 0,
+        discount: discount || 0,
+        total: total || 0,
+        due: (total || 0) - (discount || 0) - (paid || 0),
+        action: ((total || 0) - (discount || 0) - (paid || 0)) <= 0
+          ? 'Paid'
+          : (paid > 0 ? 'Partial' : 'Unpaid'),
       });
     }
 
@@ -59,12 +70,13 @@ exports.updateStudentFee = async (req, res) => {
           TotalFees: updatedTotal,
           DueFees: due,
         },
-      }
+      },
+      { upsert: true } // 📌 Create Student if not exists
     );
 
     return res.status(200).json({
       success: true,
-      message: "Fee record updated in both collections successfully",
+      message: "Fee record updated/created in both collections successfully",
       feeUpdate: feeUpdateResult,
       studentUpdate: studentUpdateResult,
     });

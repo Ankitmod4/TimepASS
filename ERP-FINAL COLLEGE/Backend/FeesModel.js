@@ -3,7 +3,7 @@
 const StudentFeeSchema = new mongoose.Schema({
   student: {
     type: String,
-    required: true
+    // required: true
   },
   roll: {
   type: String,

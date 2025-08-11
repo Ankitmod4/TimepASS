@@ -12,7 +12,8 @@ const { FindAccordingtparam } = require('../Controllers/FindAllData');
 const {FindUsers} = require('../Controllers/FindUsers');
 const { AssignmentName } = require('../Controllers/AssignmentName');
 const {updateStudentFee} = require('../Controllers/UpdateFees');
-const { uploadPhoto, uploadMiddleware } = require('../Controllers/UploadPhoto');
+const { uploadPhoto, uploadMiddleware } = require('../Controllers/SubjectUpdate');
+const { SubjectUpdate } = require('../Controllers/SubjectUpdate');
 const upload = require('./middleware/upload');
 
 
@@ -29,6 +30,7 @@ router.post('/assignment', Assignment);
 router.post('/semester', SemesterCreate);
 router.post('/login', LoginStudent);
 router.post('/adminlogin', LoginAdmin);
+router.put('/subjectUpdate', SubjectUpdate);
 router.get('/students/:rollNumber', FindAccordingtparam);
 router.get('/findUsers', FindUsers);
 router.get('/assignment/:studentName', AssignmentName);

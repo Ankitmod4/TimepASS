@@ -1,39 +1,42 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
- import axios from 'axios';
+import axios from 'axios';
+
 const StudentLogin = () => {
   const [roll, setRoll] = useState('');
   const [dob, setDob] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
- 
+  const handleLogin = async () => {
+    setLoading(true); // start loader
+    setError('');
+    try {
+      const response = await axios.post('http://localhost:3000/api/login', {
+        rollNumber: roll,
+        Password: dob,
+      });
 
-const handleLogin = async () => {
-  try {
-    const response = await axios.post('http://localhost:3000/api/login', {
-      rollNumber: roll,
-      Password: dob,
-    });
-     let rollno=JSON.stringify(roll);
-    localStorage.setItem('studentRollNumber', rollno);
+      let rollno = JSON.stringify(roll);
+      localStorage.setItem('studentRollNumber', rollno);
 
-    if (response.status === 200) {
-     if(localStorage.getItem('studentRollNumber')){
-     navigate(`/student-dashboard`);
-     }
-     else{
-      navigate(`/`);
-     }
-
-    } else {
+      if (response.status === 200) {
+        if (localStorage.getItem('studentRollNumber')) {
+          navigate(`/student-dashboard`);
+        } else {
+          navigate(`/`);
+        }
+      } else {
+        setError('Invalid Roll Number or Password');
+      }
+    } catch (error) {
       setError('Invalid Roll Number or Password');
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false); // stop loader
     }
-  } catch (error) {
-    setError('Invalid Roll Number or Password');
-    console.error('Login error:', error);
-  }
-};
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
@@ -72,9 +75,21 @@ const handleLogin = async () => {
 
         <button
           onClick={handleLogin}
-          className="w-full py-2 rounded bg-purple-600 hover:bg-purple-800 font-semibold transition duration-300"
+          disabled={loading}
+          className={`w-full py-2 rounded font-semibold transition duration-300 ${
+            loading
+              ? 'bg-gray-600 cursor-not-allowed'
+              : 'bg-purple-600 hover:bg-purple-800'
+          }`}
         >
-          Login
+          {loading ? (
+            <div className="flex items-center justify-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              Logging in...
+            </div>
+          ) : (
+            'Login'
+          )}
         </button>
       </div>
     </div>
